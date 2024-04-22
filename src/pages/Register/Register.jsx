@@ -1,4 +1,4 @@
-import { useAuthentication } from "../../hooks/useAuthentication";
+import { useAuthentication } from "../../hooks/useAuthentication.js";
 import styles from "./Register.module.css";
 
 import db from "../../firebase/config";
@@ -34,6 +34,12 @@ const Register = () => {
 
     console.log(res);
   };
+
+  useEffect(() => {
+    if (authError) {
+      setError(authError);
+    }
+  }, [authError]);
 
   useEffect(() => {
     if (authError) {
