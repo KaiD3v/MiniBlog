@@ -1,9 +1,9 @@
 import styles from "./CreatePost.module.css";
 
 import { useState } from "react";
-import { redirect, useNavigate } from "react-router-dom";
-import { useAuthValue } from "../../context/AuthContext";
 import { useInsertDocument } from "../../hooks/useInsertDocument";
+import { useNavigate } from "react-router-dom";
+import { useAuthValue } from "../../context/AuthContext";
 
 const CreatePost = () => {
   const [title, setTitle] = useState("");
@@ -14,43 +14,67 @@ const CreatePost = () => {
 
   const { user } = useAuthValue();
 
+  const navigate = useNavigate();
+
   const { insertDocument, response } = useInsertDocument("posts");
 
   const handleSubmit = (e) => {
     e.preventDefault();
     setFormError("");
 
-    // validar url da imagem
+    // validate image
+    try {
+      new URL(image);
+    } catch (error) {
+      return setFormError("A imagem precisa ser uma URL.");
+    }
 
-    // criar o array de tags
+    // create tags array
+    const tagsArray = tags.split(",").map((tag) => tag.trim().toLowerCase());
 
-    //checar todos os valores
-    insertDocument({
+    // check values
+    if (!title || !image || !tags || !body) {
+      setFormError("Por favor, preencha todos os campos!");
+    }
+
+    console.log(tagsArray);
+
+    console.log({
       title,
       image,
       body,
-      tags,
+      tags: tagsArray,
       uid: user.uid,
       createdBy: user.displayName,
     });
 
-    // redirecionar para home page
-    redirect('/home')
+    if (formError) return;
+
+    insertDocument({
+      title,
+      image,
+      body,
+      tags: tagsArray,
+      uid: user.uid,
+      createdBy: user.displayName,
+    });
+
+    // redirect to home page
+    navigate("/");
   };
 
   return (
     <div className={styles.create_post}>
       <h2>Criar post</h2>
-      <p>Escreva sobre o que você quiser e compartilhe o seu conhecimento!</p>
+      <p>Escreva sobre o que quiser e compartilhe o seu conhecimento!</p>
       <form onSubmit={handleSubmit}>
         <label>
           <span>Título:</span>
           <input
             type="text"
-            name="title"
-            id="title"
+            name="text"
             required
-            placeholder="Insira um título"
+            placeholder="Pense num bom título..."
             onChange={(e) => setTitle(e.target.value)}
             value={title}
           />
@@ -60,9 +84,8 @@ const CreatePost = () => {
           <input
             type="text"
             name="image"
-            id="image"
             required
-            placeholder="Insira uma imagem para o seu post"
+            placeholder="Insira uma imagem que representa seu post"
             onChange={(e) => setImage(e.target.value)}
             value={image}
           />
@@ -70,11 +93,11 @@ const CreatePost = () => {
         <label>
           <span>Conteúdo:</span>
           <textarea
-            onChange={(e) => setBody(e.target.value)}
             name="body"
-            placeholder="Insira o conteúdo do post"
-            value={body}
             required
+            placeholder="Insira o conteúdo do post"
+            onChange={(e) => setBody(e.target.value)}
+            value={body}
           ></textarea>
         </label>
         <label>
@@ -82,16 +105,21 @@ const CreatePost = () => {
           <input
             type="text"
             name="tags"
-            id="tags"
             required
             placeholder="Insira as tags separadas por vírgula"
             onChange={(e) => setTags(e.target.value)}
             value={tags}
           />
         </label>
-        {!response.loading && <button className="btn">Enviar</button>}
-        {response.loading && <button className="btn">Aguarde...</button>}
-        {response.error && <p className="error">{error}</p>}
+        {!response.loading && <button className="btn">Criar post!</button>}
+        {response.loading && (
+          <button className="btn" disabled>
+            Aguarde.. .
+          </button>
+        )}
+        {(response.error || formError) && (
+          <p className="error">{response.error || formError}</p>
+        )}
       </form>
     </div>
   );
