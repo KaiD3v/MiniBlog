@@ -1,5 +1,3 @@
-import db from "../firebase/config";
-
 import {
   getAuth,
   createUserWithEmailAndPassword,
@@ -14,8 +12,7 @@ export const useAuthentication = () => {
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(null);
 
-  // função cleanup
-  // lida com memory leak
+  // deal with memory leak
   const [cancelled, setCancelled] = useState(false);
 
   const auth = getAuth();
@@ -38,9 +35,10 @@ export const useAuthentication = () => {
         data.password
       );
 
-      await updateProfile(user, { displayName: data.displayName });
+      await updateProfile(user, {
+        displayName: data.displayName,
+      });
 
-      setLoading(false);
       return user;
     } catch (error) {
       console.log(error.message);
@@ -50,19 +48,33 @@ export const useAuthentication = () => {
 
       if (error.message.includes("Password")) {
         systemErrorMessage = "A senha precisa conter pelo menos 6 caracteres.";
-      } else if (error.message.includes("email already")) {
+      } else if (error.message.includes("email-already")) {
         systemErrorMessage = "E-mail já cadastrado.";
-      } else
-        systemErrorMessage =
-          "Ocorreu um erro, por favor tente novamente mais tarde.";
+      } else {
+        systemErrorMessage = "Ocorreu um erro, por favor tenta mais tarde.";
+      }
 
-      setLoading(false);
       setError(systemErrorMessage);
     }
 
-    useEffect(() => {
-      return () => setCancelled(true);
-    }, []);
+    setLoading(false);
   };
-  return { createUser, auth, error, loading };
+
+  const logout = () => {
+    checkIfIsCancelled();
+
+    signOut(auth);
+  };
+
+  useEffect(() => {
+    return () => setCancelled(true);
+  }, []);
+
+  return {
+    auth,
+    createUser,
+    error,
+    logout,
+    loading,
+  };
 };
