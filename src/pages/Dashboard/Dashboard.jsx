@@ -46,7 +46,7 @@ const Dashboard = () => {
                   </Link>
                   <Link
                     className="btn btn-outline"
-                    to={`posts/edit/${post.id}`}
+                    to={`/posts/edit/${post.id}`}
                   >
                     Editar
                   </Link>
